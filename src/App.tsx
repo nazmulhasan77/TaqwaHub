@@ -1,0 +1,155 @@
+import { useEffect, useMemo, useState } from 'react';
+import AnalogClock from './components/AnalogClock';
+import Dashboard from './components/Dashboard';
+import DhikrCounter from './components/DhikrCounter';
+import FocusPanel from './components/FocusPanel';
+import HadithCard from './components/HadithCard';
+import LanguageToggle from './components/LanguageToggle';
+import PomodoroTimer from './components/PomodoroTimer';
+import PrayerTimesCard from './components/PrayerTimesCard';
+import ProductivityTasks from './components/ProductivityTasks';
+import QuranCard from './components/QuranCard';
+import SalahTracker from './components/SalahTracker';
+import SearchBar from './components/SearchBar';
+import SettingsModal from './components/SettingsModal';
+import WeatherCard from './components/WeatherCard';
+import { hadithSamples } from './data/hadithSamples';
+import { getPrayerTimes } from './services/prayerService';
+import { getHourlyAyah, getRandomAyah } from './services/quranService';
+import { defaultSettings, getStored, setStored } from './services/storageService';
+import { schedulePrayerNotifications } from './services/notificationService';
+import type { Hadith, PrayerName, PrayerTimes, QuranAyah, Settings, Task } from './types';
+import { dateKey, deterministicIndex } from './utils/dateUtils';
+
+export default function App() {
+  const [settings, setSettings] = useState<Settings>(defaultSettings);
+  const [now, setNow] = useState(new Date());
+  const [prayerTimes, setPrayerTimes] = useState<PrayerTimes | null>(null);
+  const [warning, setWarning] = useState('');
+  const [error, setError] = useState('');
+  const [ayah, setAyah] = useState<QuranAyah | null>(null);
+  const [hadith, setHadith] = useState<Hadith>(hadithSamples[0]);
+  const [completed, setCompleted] = useState<PrayerName[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [note, setNote] = useState('');
+  const [dhikr, setDhikr] = useState<Record<string, number>>({});
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const today = dateKey(now);
+  const hourKey = now.toISOString().slice(0, 13);
+
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(new Date()), 1000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    void (async () => {
+      const stored = await getStored('settings', defaultSettings);
+      setSettings({ ...defaultSettings, ...stored });
+      setCompleted(await getStored(`salah:${today}`, []));
+      setTasks(await getStored(`tasks:${today}`, []));
+      setNote(await getStored('quickNote', ''));
+      setDhikr(await getStored(`dhikr:${today}`, {}));
+      setHadith(hadithSamples[deterministicIndex(`${hourKey}:hadith`, hadithSamples.length)]);
+      setAyah(await getHourlyAyah(now));
+    })();
+  }, [today, hourKey]);
+
+  useEffect(() => {
+    void setStored('settings', settings);
+    void (async () => {
+      try {
+        setError('');
+        const result = await getPrayerTimes(settings);
+        setPrayerTimes(result.data);
+        setWarning(result.warning ?? '');
+        schedulePrayerNotifications(settings, result.data);
+      } catch {
+        setError('Prayer times could not be loaded. Please check your city, country, and connection.');
+      }
+    })();
+  }, [settings.city, settings.country, settings.method, settings.notificationsEnabled, settings.notificationMinutes]);
+
+  useEffect(() => { void setStored(`salah:${today}`, completed); }, [completed, today]);
+  useEffect(() => { void setStored(`tasks:${today}`, tasks); }, [tasks, today]);
+  useEffect(() => { void setStored('quickNote', note); }, [note]);
+  useEffect(() => { void setStored(`dhikr:${today}`, dhikr); }, [dhikr, today]);
+
+  const updateSettings = (next: Settings) => {
+    setSettings(next);
+    void setStored('settings', next);
+  };
+
+  const togglePrayer = (name: PrayerName) => {
+    setCompleted((items) => items.includes(name) ? items.filter((item) => item !== name) : [...items, name]);
+  };
+
+  const isFriday = now.getDay() === 5;
+  const isRamadan = prayerTimes?.hijri.monthNumber === 9;
+  const ramadanDay = prayerTimes?.hijri.day;
+
+  const favorites = useMemo(() => ({
+    ayah: async () => setStored('favoriteAyahs', [...await getStored<QuranAyah[]>('favoriteAyahs', []), ayah].filter(Boolean)),
+    hadith: async () => setStored('favoriteHadith', [...await getStored<Hadith[]>('favoriteHadith', []), hadith])
+  }), [ayah, hadith]);
+
+  return (
+    <main className="app-shell">
+      <header className="app-header">
+        <div className="header-actions">
+          <button className="round-action">✦</button>
+          <LanguageToggle language={settings.language} onChange={(language) => updateSettings({ ...settings, language })} />
+          <button className="round-action" onClick={() => setSettingsOpen(true)}>⚙</button>
+        </div>
+      </header>
+
+      {error && <div className="banner error">{error}</div>}
+      {warning && <div className="banner">{warning}</div>}
+
+      <section className="newtab-grid">
+        <AnalogClock
+          now={now}
+          clockMode={settings.clockMode}
+          onClockModeChange={(clockMode) => updateSettings({ ...settings, clockMode })}
+        />
+
+        <div className="center-column">
+          {prayerTimes ? (
+            <Dashboard now={now} language={settings.language} timeFormat={settings.timeFormat} prayerTimes={prayerTimes} />
+          ) : (
+            <section className="glass loading">Loading prayer dashboard...</section>
+          )}
+          <SearchBar />
+        </div>
+
+        <WeatherCard settings={settings} />
+
+        <div className="bottom-row">
+          {settings.showQuran && ayah && <QuranCard ayah={ayah} language={settings.language} onRandom={async () => setAyah(await getRandomAyah())} onFavorite={favorites.ayah} />}
+          {settings.showHadith && <FocusPanel hadith={hadith} language={settings.language} completed={completed} onToggle={togglePrayer} />}
+        </div>
+      </section>
+
+      <details className="tools-drawer">
+        <summary>More tools</summary>
+        <div className="content-grid compact-tools">
+          {prayerTimes && <PrayerTimesCard prayerTimes={prayerTimes} now={now} language={settings.language} />}
+          <SalahTracker language={settings.language} completed={completed} onToggle={togglePrayer} />
+          {settings.showHadith && <HadithCard hadith={hadith} language={settings.language} onRandom={() => setHadith(hadithSamples[Math.floor(Math.random() * hadithSamples.length)])} onFavorite={favorites.hadith} />}
+          {prayerTimes && <PomodoroTimer language={settings.language} prayerTimes={prayerTimes} now={now} />}
+          <DhikrCounter language={settings.language} counts={dhikr} onCounts={setDhikr} />
+          {settings.showProductivity && <ProductivityTasks language={settings.language} tasks={tasks} note={note} onTasks={setTasks} onNote={setNote} />}
+        </div>
+      </details>
+
+      {(isFriday || isRamadan) && (
+        <div className="content-grid compact-tools">
+          {isFriday && <section className="glass card"><h3>Today is Jumu'ah</h3><p>Read Surah Al-Kahf, send Salawat, go early to the masjid, and make dua before Maghrib.</p></section>}
+          {isRamadan && <section className="glass card"><h3>Ramadan Day {ramadanDay}</h3><p>Sehri ends at Fajr. Iftar is at Maghrib. Taraweeh reminder and daily Ramadan dua can be customized in a future release.</p></section>}
+        </div>
+      )}
+
+      <SettingsModal open={settingsOpen} settings={settings} onClose={() => setSettingsOpen(false)} onSave={updateSettings} />
+    </main>
+  );
+}
