@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import AnalogClock from './components/AnalogClock';
+import AsmaulHusnaCard from './components/AsmaulHusnaCard';
 import Dashboard from './components/Dashboard';
 import DhikrCounter from './components/DhikrCounter';
 import FocusPanel from './components/FocusPanel';
@@ -12,7 +13,6 @@ import QuranCard from './components/QuranCard';
 import SalahTracker from './components/SalahTracker';
 import SearchBar from './components/SearchBar';
 import SettingsModal from './components/SettingsModal';
-import WeatherCard from './components/WeatherCard';
 import { hadithSamples } from './data/hadithSamples';
 import { getPrayerTimes } from './services/prayerService';
 import { getHourlyAyah, getRandomAyah } from './services/quranService';
@@ -88,11 +88,6 @@ export default function App() {
   const isRamadan = prayerTimes?.hijri.monthNumber === 9;
   const ramadanDay = prayerTimes?.hijri.day;
 
-  const favorites = useMemo(() => ({
-    ayah: async () => setStored('favoriteAyahs', [...await getStored<QuranAyah[]>('favoriteAyahs', []), ayah].filter(Boolean)),
-    hadith: async () => setStored('favoriteHadith', [...await getStored<Hadith[]>('favoriteHadith', []), hadith])
-  }), [ayah, hadith]);
-
   return (
     <main className="app-shell">
       <header className="app-header">
@@ -122,12 +117,13 @@ export default function App() {
           <SearchBar />
         </div>
 
-        <WeatherCard settings={settings} />
-
-        <div className="bottom-row">
-          {settings.showQuran && ayah && <QuranCard ayah={ayah} language={settings.language} onRandom={async () => setAyah(await getRandomAyah())} onFavorite={favorites.ayah} />}
-          {settings.showHadith && <FocusPanel hadith={hadith} language={settings.language} completed={completed} onToggle={togglePrayer} />}
+        <div className="right-column">
+          <AsmaulHusnaCard now={now} />
+          {settings.showQuran && ayah && <QuranCard ayah={ayah} language={settings.language} />}
+          {settings.showHadith && <HadithCard hadith={hadith} language={settings.language} />}
         </div>
+
+
       </section>
 
       <details className="tools-drawer">
@@ -135,7 +131,7 @@ export default function App() {
         <div className="content-grid compact-tools">
           {prayerTimes && <PrayerTimesCard prayerTimes={prayerTimes} now={now} language={settings.language} />}
           <SalahTracker language={settings.language} completed={completed} onToggle={togglePrayer} />
-          {settings.showHadith && <HadithCard hadith={hadith} language={settings.language} onRandom={() => setHadith(hadithSamples[Math.floor(Math.random() * hadithSamples.length)])} onFavorite={favorites.hadith} />}
+          {settings.showHadith && <HadithCard hadith={hadith} language={settings.language} />}
           {prayerTimes && <PomodoroTimer language={settings.language} prayerTimes={prayerTimes} now={now} />}
           <DhikrCounter language={settings.language} counts={dhikr} onCounts={setDhikr} />
           {settings.showProductivity && <ProductivityTasks language={settings.language} tasks={tasks} note={note} onTasks={setTasks} onNote={setNote} />}

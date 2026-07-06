@@ -23,15 +23,12 @@ export const labels = {
     start: 'Start',
     pause: 'Pause',
     save: 'Save',
-    copy: 'Copy',
-    favorite: 'Favorite',
-    random: 'Random',
     dhikr: 'Dhikr Counter',
     focus: 'Barakah Focus Timer'
   },
   bn: {
     nextPrayer: 'পরবর্তী নামাজ',
-    dailyQuran: 'প্রতি ঘণ্টার কুরআন আয়াত',
+    dailyQuran: 'প্রতি ঘণ্টার কুরআন আয়াত',
     dailyHadith: 'প্রতি ঘণ্টার হাদিস',
     salahProgress: 'আজকের নামাজ অগ্রগতি',
     tasks: 'আজকের ফোকাস কাজ',
@@ -41,9 +38,6 @@ export const labels = {
     start: 'শুরু',
     pause: 'বিরতি',
     save: 'সংরক্ষণ',
-    copy: 'কপি',
-    favorite: 'প্রিয়',
-    random: 'র‍্যান্ডম',
     dhikr: 'জিকির কাউন্টার',
     focus: 'বারাকাহ ফোকাস টাইমার'
   }
