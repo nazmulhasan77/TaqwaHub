@@ -57,7 +57,7 @@ function addMinutes(date: Date, minutes: number): Date {
 }
 
 export function formatPrayerWindowTime(date: Date): string {
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
 }
 
 export function getForbiddenPrayerWindows(prayerTimes: PrayerTimes, now = new Date()) {
@@ -88,4 +88,34 @@ export function getForbiddenPrayerWindows(prayerTimes: PrayerTimes, now = new Da
     ...window,
     active: now >= window.startsAt && now < window.endsAt
   }));
+}
+
+export function getPrayerTimeWindow(prayerTimes: PrayerTimes, prayer: PrayerName, now = new Date()) {
+  const fajr = parsePrayerTime(prayerTimes.timings.Fajr, now);
+  const sunrise = parsePrayerTime(prayerTimes.timings.Sunrise, now);
+  const dhuhr = parsePrayerTime(prayerTimes.timings.Dhuhr, now);
+  const asr = parsePrayerTime(prayerTimes.timings.Asr, now);
+  const maghrib = parsePrayerTime(prayerTimes.timings.Maghrib, now);
+  const isha = parsePrayerTime(prayerTimes.timings.Isha, now);
+
+  const windows: Record<PrayerName, { start: Date; end: Date }> = {
+    Fajr: { start: fajr, end: sunrise },
+    Dhuhr: { start: dhuhr, end: asr },
+    Asr: { start: asr, end: maghrib },
+    Maghrib: { start: maghrib, end: isha },
+    Isha: { start: isha, end: (() => { const t = new Date(fajr); t.setDate(t.getDate() + 1); return t; })() }
+  };
+
+  return windows[prayer];
+}
+
+export function getPrayerProgress(prayerTimes: PrayerTimes, prayer: PrayerName, now = new Date()) {
+  const window = getPrayerTimeWindow(prayerTimes, prayer, now);
+  const totalDuration = window.end.getTime() - window.start.getTime();
+  const elapsed = now.getTime() - window.start.getTime();
+  
+  if (now < window.start) return 0;
+  if (now >= window.end) return 100;
+  
+  return Math.max(0, Math.min(100, (elapsed / totalDuration) * 100));
 }

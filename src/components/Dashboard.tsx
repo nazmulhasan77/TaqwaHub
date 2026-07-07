@@ -2,12 +2,13 @@ import { getAsmaNameForKey } from '../data/asmaulHusna';
 import { prayerLabels } from '../data/translations';
 import { getUpcomingIslamicEvent } from '../services/eventService';
 import type { Language, PrayerTimes } from '../types';
-import { dayPart, secondsToClock } from '../utils/dateUtils';
+import { dayPart, secondsToClock, formatTime12h } from '../utils/dateUtils';
 import {
   formatPrayerWindowTime,
   getCurrentSalahPeriod,
   getForbiddenPrayerWindows,
   getNextPrayer,
+  getPrayerProgress,
   prayerOrder
 } from '../utils/prayerUtils';
 
@@ -52,7 +53,7 @@ export default function Dashboard({ now, language, prayerTimes, contentChangeKey
       <div className="next-prayer-band">
         <div className="sun-pill">
           <span>🌅 SUNRISE</span>
-          <strong>{prayerTimes.timings.Sunrise}</strong>
+          <strong>{formatTime12h(prayerTimes.timings.Sunrise)}</strong>
         </div>
         <div className="next-prayer-main">
           <span>Next Prayer</span>
@@ -61,7 +62,7 @@ export default function Dashboard({ now, language, prayerTimes, contentChangeKey
         </div>
         <div className="sun-pill right">
           <span>🌇 SUNSET</span>
-          <strong>{prayerTimes.timings.Sunset}</strong>
+          <strong>{formatTime12h(prayerTimes.timings.Sunset)}</strong>
         </div>
       </div>
 
@@ -78,12 +79,20 @@ export default function Dashboard({ now, language, prayerTimes, contentChangeKey
       </div>
 
       <div className="prayer-strip">
-        {prayerOrder.map((name) => (
-          <div key={name} className={next.name === name ? 'prayer-chip active' : 'prayer-chip'}>
-            <span>{prayerLabels[name][language]}</span>
-            <strong>{prayerTimes.timings[name]}</strong>
-          </div>
-        ))}
+        {prayerOrder.map((name) => {
+          const progress = getPrayerProgress(prayerTimes, name, now);
+          return (
+            <div key={name} className={current === name ? 'prayer-chip active' : 'prayer-chip'}>
+              <div className="prayer-chip-content">
+                <span>{prayerLabels[name][language]}</span>
+                <strong>{formatTime12h(prayerTimes.timings[name])}</strong>
+              </div>
+              <div className="progress-bar">
+                <div className="progress-fill" style={{ width: `${progress}%` }} />
+              </div>
+            </div>
+          );
+        })}
       </div>
     </section>
   );

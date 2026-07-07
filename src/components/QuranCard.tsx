@@ -11,9 +11,12 @@ export default function QuranCard({ ayah, language }: Props) {
   return (
     <section className="glass card quote-card compact-quote">
       <div className="section-title">
-        <span>Ayat <small>{ayah.surah} ({ayah.id})</small></span>
+        <span>Ayat</span>
       </div>
       <p>{translation}</p>
+      <p style={{ marginTop: '10px', color: 'rgba(238, 245, 255, 0.62)', fontSize: '0.85rem' }}>
+        {ayah.surah} ({ayah.id})
+      </p>
     </section>
   );
 }

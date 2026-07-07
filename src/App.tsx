@@ -3,6 +3,7 @@ import AnalogClock from './components/AnalogClock';
 import AsmaulHusnaCard from './components/AsmaulHusnaCard';
 import Dashboard from './components/Dashboard';
 import DhikrCounter from './components/DhikrCounter';
+import DuaCard from './components/DuaCard';
 import FocusPanel from './components/FocusPanel';
 import HadithCard from './components/HadithCard';
 import LanguageToggle from './components/LanguageToggle';
@@ -17,9 +18,10 @@ import { hadithSamples } from './data/hadithSamples';
 import { vocabularyIntervalKey } from './data/dailyWords';
 import { getPrayerTimes } from './services/prayerService';
 import { getAyahForKey } from './services/quranService';
+import { getDuaForKey } from './services/duaService';
 import { defaultSettings, getStored, setStored } from './services/storageService';
 import { schedulePrayerNotifications } from './services/notificationService';
-import type { Hadith, PrayerName, PrayerTimes, QuranAyah, Settings, Task } from './types';
+import type { Dua, Hadith, PrayerName, PrayerTimes, QuranAyah, Settings, Task } from './types';
 import { dateKey, deterministicIndex } from './utils/dateUtils';
 
 export default function App() {
@@ -30,6 +32,7 @@ export default function App() {
   const [error, setError] = useState('');
   const [ayah, setAyah] = useState<QuranAyah | null>(null);
   const [hadith, setHadith] = useState<Hadith>(hadithSamples[0]);
+  const [dua, setDua] = useState<Dua | null>(null);
   const [completed, setCompleted] = useState<PrayerName[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [note, setNote] = useState('');
@@ -86,6 +89,7 @@ export default function App() {
   useEffect(() => {
     setHadith(hadithSamples[deterministicIndex(`${contentChangeKey}:hadith`, hadithSamples.length)]);
     void getAyahForKey(contentChangeKey).then(setAyah);
+    void getDuaForKey(contentChangeKey).then(setDua);
   }, [contentChangeKey]);
 
   useEffect(() => {
@@ -172,10 +176,13 @@ export default function App() {
       {warning && <div className="banner">{warning}</div>}
 
       <section className="newtab-grid">
-        <AnalogClock
-          now={now}
-          clockMode={settings.clockMode}
-        />
+        <div className="left-column">
+          <AnalogClock
+            now={now}
+            clockMode={settings.clockMode}
+          />
+          {settings.showDua && dua && <DuaCard dua={dua} language={settings.language} />}
+        </div>
 
         <div className="center-column">
           {prayerTimes ? (

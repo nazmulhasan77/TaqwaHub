@@ -11,8 +11,9 @@ export const defaultSettings: Settings = {
   notificationMinutes: 10,
   showQuran: true,
   showHadith: true,
+  showDua: true,
   showProductivity: true,
-  autoLocationEnabled: false,
+  autoLocationEnabled: true,
   latitude: null,
   longitude: null,
   customPrayerTimes: {
@@ -24,7 +25,7 @@ export const defaultSettings: Settings = {
   },
   hijriAdjustment: -1,
   backgroundTheme: 'default',
-  wordChangeInterval: 'daily'
+  wordChangeInterval: 'hourly'
 };
 
 const hasChromeStorage = () => typeof chrome !== 'undefined' && Boolean(chrome.storage?.local);

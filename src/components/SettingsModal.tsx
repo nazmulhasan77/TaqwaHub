@@ -164,6 +164,7 @@ export default function SettingsModal({ open, settings, onClose, onSave }: Props
           <label><input type="checkbox" checked={settings.timeFormat === '12h'} onChange={(e) => update('timeFormat', e.target.checked ? '12h' : '24h')} /> 12-hour time</label>
           <label><input type="checkbox" checked={settings.notificationsEnabled} onChange={(e) => update('notificationsEnabled', e.target.checked)} /> Enable notifications</label>
           <label><input type="checkbox" checked={settings.showQuran} onChange={(e) => update('showQuran', e.target.checked)} /> Quran card</label>
+          <label><input type="checkbox" checked={settings.showDua} onChange={(e) => update('showDua', e.target.checked)} /> Dua card</label>
           <label><input type="checkbox" checked={settings.showHadith} onChange={(e) => update('showHadith', e.target.checked)} /> Hadith card</label>
           <label><input type="checkbox" checked={settings.showProductivity} onChange={(e) => update('showProductivity', e.target.checked)} /> Productivity tools</label>
         </div>

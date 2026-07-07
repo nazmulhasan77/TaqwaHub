@@ -45,3 +45,12 @@ export function deterministicIndex(seed: string, length: number): number {
   for (let i = 0; i < seed.length; i += 1) hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
   return hash % length;
 }
+
+export function formatTime12h(time: string): string {
+  const [hourStr, minuteStr] = time.split(':').map(Number);
+  let hour = hourStr;
+  const period = hour >= 12 ? 'PM' : 'AM';
+  hour = hour % 12;
+  hour = hour ? hour : 12;
+  return `${String(hour).padStart(2, '0')}:${String(minuteStr).padStart(2, '0')} ${period}`;
+}

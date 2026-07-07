@@ -3,7 +3,6 @@ import { useState } from 'react';
 const engines = {
   Default: 'https://www.google.com/search?q=',
   Google: 'https://www.google.com/search?q=',
-  DuckDuckGo: 'https://duckduckgo.com/?q=',
   Bing: 'https://www.bing.com/search?q=',
   Brave: 'https://search.brave.com/search?q='
 };

@@ -34,7 +34,7 @@ export default function AsmaulHusnaCard({ now, wordChangeInterval }: Props) {
   return (
     <section className="glass card compact-quote daily-word-card">
       <div className="section-title">
-        <span>Daily Words</span>
+        <span>Words</span>
       </div>
       <div className="word-group">
         <span className="word-label">Quran Arabic</span>

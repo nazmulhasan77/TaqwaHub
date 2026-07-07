@@ -15,6 +15,7 @@ export interface Settings {
   notificationMinutes: number;
   showQuran: boolean;
   showHadith: boolean;
+  showDua: boolean;
   showProductivity: boolean;
   autoLocationEnabled: boolean;
   latitude: number | null;
@@ -75,4 +76,13 @@ export interface IslamicEvent {
   day: number;
   type?: 'single' | 'range';
   endDay?: number;
+}
+
+export interface Dua {
+  id: string;
+  arabic: string;
+  english: string;
+  bangla: string;
+  category: string;
+  reference: string;
 }
