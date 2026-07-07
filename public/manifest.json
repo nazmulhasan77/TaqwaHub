@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "TaqwaHub",
+  "name": "Taqwa Hub - New Tab",
   "version": "1.0.0",
   "description": "Every New Tab, A Step Closer to Allah.",
   "chrome_url_overrides": {

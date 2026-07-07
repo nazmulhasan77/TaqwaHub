@@ -1,4 +1,4 @@
-import type { PrayerTimes, Settings } from '../types';
+import type { HijriDate, PrayerTimes, Settings } from '../types';
 import { aladhanDate, dateKey } from '../utils/dateUtils';
 import { getStored, setStored } from './storageService';
 
@@ -75,11 +75,65 @@ function cacheKey(settings: Settings, date = new Date()) {
   return `prayer:${dateKey(date)}:${settings.city.toLowerCase()}:${settings.country.toLowerCase()}:${settings.method}`;
 }
 
+function buildPrayerUrl(settings: Settings, date = new Date()): URL {
+  let url: URL;
+  if (settings.autoLocationEnabled && settings.latitude && settings.longitude) {
+    url = new URL(`https://api.aladhan.com/v1/timings/${aladhanDate(date)}`);
+    url.searchParams.set('latitude', String(settings.latitude));
+    url.searchParams.set('longitude', String(settings.longitude));
+    url.searchParams.set('method', String(settings.method));
+  } else {
+    url = new URL(`https://api.aladhan.com/v1/timingsByCity/${aladhanDate(date)}`);
+    url.searchParams.set('city', settings.city);
+    url.searchParams.set('country', settings.country);
+    url.searchParams.set('method', String(settings.method));
+  }
+  return url;
+}
+
+function parseHijri(hijri: any): HijriDate {
+  return {
+    day: Number(hijri.day),
+    month: hijri.month.en,
+    monthNumber: Number(hijri.month.number),
+    year: Number(hijri.year)
+  };
+}
+
+function parseTimeToday(time: string, base = new Date()): Date {
+  const clean = time.split(' ')[0];
+  const [hour, minute] = clean.split(':').map(Number);
+  const date = new Date(base);
+  date.setHours(hour, minute, 0, 0);
+  return date;
+}
+
+async function fetchHijriForDate(settings: Settings, date: Date): Promise<HijriDate> {
+  const response = await fetch(buildPrayerUrl(settings, date));
+  if (!response.ok) throw new Error(`Aladhan responded ${response.status}`);
+  const json = await response.json();
+  return parseHijri(json.data.date.hijri);
+}
+
+async function applySunsetHijriDate(prayerTimes: PrayerTimes, settings: Settings, now = new Date()): Promise<PrayerTimes> {
+  const sunset = parseTimeToday(prayerTimes.timings.Sunset, now);
+  if (now < sunset) return prayerTimes;
+
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  try {
+    return { ...prayerTimes, hijri: await fetchHijriForDate(settings, tomorrow) };
+  } catch {
+    return prayerTimes;
+  }
+}
+
 export async function getPrayerTimes(settings: Settings): Promise<{ data: PrayerTimes; warning?: string }> {
   const key = cacheKey(settings);
   const cached = await getStored<PrayerTimes | null>(key, null);
   if (cached) {
-    let dataWithCustom = applyHijriAdjustment(cached, settings.hijriAdjustment);
+    let dataWithCustom = applyHijriAdjustment(await applySunsetHijriDate(cached, settings), settings.hijriAdjustment);
     // Apply custom prayer times
     Object.entries(settings.customPrayerTimes).forEach(([prayer, time]) => {
       if (time) {
@@ -89,20 +143,7 @@ export async function getPrayerTimes(settings: Settings): Promise<{ data: Prayer
     return { data: dataWithCustom };
   }
 
-  let url: URL;
-  if (settings.autoLocationEnabled && settings.latitude && settings.longitude) {
-    url = new URL(`https://api.aladhan.com/v1/timings/${aladhanDate()}`);
-    url.searchParams.set('latitude', String(settings.latitude));
-    url.searchParams.set('longitude', String(settings.longitude));
-    url.searchParams.set('method', String(settings.method));
-    url.searchParams.set('adjustment', String(settings.hijriAdjustment));
-  } else {
-    url = new URL(`https://api.aladhan.com/v1/timingsByCity/${aladhanDate()}`);
-    url.searchParams.set('city', settings.city);
-    url.searchParams.set('country', settings.country);
-    url.searchParams.set('method', String(settings.method));
-    url.searchParams.set('adjustment', String(settings.hijriAdjustment));
-  }
+  const url = buildPrayerUrl(settings);
 
   try {
     const response = await fetch(url);
@@ -125,12 +166,7 @@ export async function getPrayerTimes(settings: Settings): Promise<{ data: Prayer
         Sunrise: timings.Sunrise,
         Sunset: timings.Sunset
       },
-      hijri: {
-        day: Number(hijri.day),
-        month: hijri.month.en,
-        monthNumber: Number(hijri.month.number),
-        year: Number(hijri.year)
-      },
+      hijri: parseHijri(hijri),
       gregorianDate: json.data.date.readable,
       source: 'api'
     };
@@ -141,7 +177,7 @@ export async function getPrayerTimes(settings: Settings): Promise<{ data: Prayer
     await setStored('lastPrayerTimes', dataToStore);
     
     // Apply hijri adjustment first
-    let finalData = applyHijriAdjustment(data, settings.hijriAdjustment);
+    let finalData = applyHijriAdjustment(await applySunsetHijriDate(data, settings), settings.hijriAdjustment);
     // Then apply custom prayer times
     Object.entries(settings.customPrayerTimes).forEach(([prayer, time]) => {
       if (time) {
@@ -153,7 +189,7 @@ export async function getPrayerTimes(settings: Settings): Promise<{ data: Prayer
   } catch (error) {
     const last = await getStored<PrayerTimes | null>('lastPrayerTimes', null);
     if (last) {
-      let dataWithCustom = applyHijriAdjustment(last, settings.hijriAdjustment);
+      let dataWithCustom = applyHijriAdjustment(await applySunsetHijriDate(last, settings), settings.hijriAdjustment);
       Object.entries(settings.customPrayerTimes).forEach(([prayer, time]) => {
         if (time) {
           dataWithCustom.timings[prayer as keyof typeof dataWithCustom.timings] = time;

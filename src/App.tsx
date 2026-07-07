@@ -35,11 +35,13 @@ export default function App() {
   const [note, setNote] = useState('');
   const [dhikr, setDhikr] = useState<Record<string, number>>({});
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
   const today = dateKey(now);
   const contentChangeKey = useMemo(
     () => vocabularyIntervalKey(now, settings.wordChangeInterval),
     [now, settings.wordChangeInterval]
   );
+  const customPrayerTimesKey = useMemo(() => JSON.stringify(settings.customPrayerTimes), [settings.customPrayerTimes]);
 
   // Apply background theme
   useEffect(() => {
@@ -63,14 +65,22 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+
     void (async () => {
       const stored = await getStored('settings', defaultSettings);
+      if (cancelled) return;
       setSettings({ ...defaultSettings, ...stored });
       setCompleted(await getStored(`salah:${today}`, []));
       setTasks(await getStored(`tasks:${today}`, []));
       setNote(await getStored('quickNote', ''));
       setDhikr(await getStored(`dhikr:${today}`, {}));
+      setSettingsLoaded(true);
     })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [today]);
 
   useEffect(() => {
@@ -79,27 +89,31 @@ export default function App() {
   }, [contentChangeKey]);
 
   useEffect(() => {
-    if (settings.autoLocationEnabled && (!settings.latitude || !settings.longitude)) {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          async (position) => {
+    if (!settingsLoaded) return;
+
+    if (settings.autoLocationEnabled && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setSettings((current) => {
             const newSettings = {
-              ...settings,
+              ...current,
               latitude: position.coords.latitude,
               longitude: position.coords.longitude
             };
-            setSettings(newSettings);
-            await setStored('settings', newSettings);
-          },
-          (error) => {
-            console.error('Geolocation error:', error);
-          }
-        );
-      }
+            void setStored('settings', newSettings);
+            return newSettings;
+          });
+        },
+        (error) => {
+          console.error('Geolocation error:', error);
+        }
+      );
     }
-  }, [settings.autoLocationEnabled, settings.latitude, settings.longitude]);
+  }, [settingsLoaded, settings.autoLocationEnabled]);
 
   useEffect(() => {
+    if (!settingsLoaded) return;
+
     void setStored('settings', settings);
     void (async () => {
       try {
@@ -112,7 +126,19 @@ export default function App() {
         setError('Prayer times could not be loaded. Please check your city, country, and connection.');
       }
     })();
-  }, [settings.city, settings.country, settings.method, settings.notificationsEnabled, settings.notificationMinutes]);
+  }, [
+    settings.autoLocationEnabled,
+    settings.latitude,
+    settings.longitude,
+    settings.city,
+    settings.country,
+    settings.method,
+    settings.hijriAdjustment,
+    settings.notificationsEnabled,
+    settings.notificationMinutes,
+    customPrayerTimesKey,
+    settingsLoaded
+  ]);
 
   useEffect(() => { void setStored(`salah:${today}`, completed); }, [completed, today]);
   useEffect(() => { void setStored(`tasks:${today}`, tasks); }, [tasks, today]);
@@ -149,7 +175,6 @@ export default function App() {
         <AnalogClock
           now={now}
           clockMode={settings.clockMode}
-          onClockModeChange={(clockMode) => updateSettings({ ...settings, clockMode })}
         />
 
         <div className="center-column">

@@ -4,10 +4,9 @@ import { formatClock, formatDate } from '../utils/dateUtils';
 interface Props {
   now: Date;
   clockMode: Settings['clockMode'];
-  onClockModeChange: (mode: Settings['clockMode']) => void;
 }
 
-export default function AnalogClock({ now, clockMode, onClockModeChange }: Props) {
+export default function AnalogClock({ now, clockMode }: Props) {
   const seconds = now.getSeconds();
   const minutes = now.getMinutes() + seconds / 60;
   const hours = (now.getHours() % 12) + minutes / 60;
@@ -17,11 +16,6 @@ export default function AnalogClock({ now, clockMode, onClockModeChange }: Props
       <div className="brand-mark">
         <span className="brand-icon">✺</span>
         <strong><span>Taqwa</span>Hub</strong>
-      </div>
-
-      <div className="clock-toggle segmented">
-        <button className={clockMode === 'analog' ? 'active' : ''} onClick={() => onClockModeChange('analog')}>Analog</button>
-        <button className={clockMode === 'digital' ? 'active' : ''} onClick={() => onClockModeChange('digital')}>Digital</button>
       </div>
 
       {clockMode === 'analog' ? (

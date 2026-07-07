@@ -3,7 +3,13 @@ import { prayerLabels } from '../data/translations';
 import { getUpcomingIslamicEvent } from '../services/eventService';
 import type { Language, PrayerTimes } from '../types';
 import { dayPart, secondsToClock } from '../utils/dateUtils';
-import { getCurrentOrNextPrayer, getNextPrayer, prayerOrder } from '../utils/prayerUtils';
+import {
+  formatPrayerWindowTime,
+  getCurrentSalahPeriod,
+  getForbiddenPrayerWindows,
+  getNextPrayer,
+  prayerOrder
+} from '../utils/prayerUtils';
 
 interface Props {
   now: Date;
@@ -16,9 +22,10 @@ export default function Dashboard({ now, language, prayerTimes, contentChangeKey
   const hijri = prayerTimes.hijri;
   const event = getUpcomingIslamicEvent(hijri, language);
   const asmaName = getAsmaNameForKey(contentChangeKey);
-  const { current } = getCurrentOrNextPrayer(prayerTimes, now);
+  const { current, at, status } = getCurrentSalahPeriod(prayerTimes, now);
   const next = getNextPrayer(prayerTimes, now);
-  const countdown = secondsToClock((next.at.getTime() - now.getTime()) / 1000);
+  const forbiddenWindows = getForbiddenPrayerWindows(prayerTimes, now);
+  const countdown = secondsToClock((at.getTime() - now.getTime()) / 1000);
   const weekday = new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(now);
 
   return (
@@ -49,12 +56,24 @@ export default function Dashboard({ now, language, prayerTimes, contentChangeKey
         </div>
         <div className="next-prayer-main">
           <span>Next Prayer</span>
-          <h2>{prayerLabels[current][language]} Ends</h2>
+          <h2>{prayerLabels[current][language]} {status}</h2>
           <strong>{countdown}</strong>
         </div>
         <div className="sun-pill right">
           <span>🌇 SUNSET</span>
           <strong>{prayerTimes.timings.Sunset}</strong>
+        </div>
+      </div>
+
+      <div className="forbidden-times">
+        <span>{language === 'bn' ? 'নিষিদ্ধ সময়' : 'Forbidden Times'}</span>
+        <div>
+          {forbiddenWindows.map((window) => (
+            <small key={window.id} className={window.active ? 'active' : ''}>
+              <strong>{window.label[language]}</strong>
+              {formatPrayerWindowTime(window.startsAt)} - {formatPrayerWindowTime(window.endsAt)}
+            </small>
+          ))}
         </div>
       </div>
 

@@ -198,10 +198,6 @@ textarea {
   border: 2px solid #4f8cff;
 }
 
-.clock-toggle {
-  display: none;
-}
-
 .analog-clock {
   position: relative;
   width: 300px;
@@ -405,23 +401,23 @@ textarea {
 
 .salah-hero {
   width: 100%;
-  border-radius: 28px;
-  padding: 24px 28px 20px;
+  border-radius: 22px;
+  padding: 16px 20px 14px;
 }
 
 .salah-top {
   display: grid;
   grid-template-columns: 1fr 1.45fr 1fr;
   align-items: start;
-  gap: 18px;
+  gap: 14px;
 }
 
 .hijri-block,
 .event-block {
   display: grid;
-  gap: 7px;
+  gap: 5px;
   color: #71a8ff;
-  font-size: 1rem;
+  font-size: 0.88rem;
   font-weight: 800;
 }
 
@@ -457,27 +453,27 @@ textarea {
 
 .hourly-asma {
   display: grid;
-  gap: 6px;
+  gap: 3px;
   justify-items: center;
   text-align: center;
 }
 
 .time-block .hourly-asma strong {
   color: #f4f8ff;
-  font-size: clamp(2.3rem, 4vw, 3.4rem);
+  font-size: clamp(1.9rem, 3.3vw, 2.75rem);
   font-weight: 800;
   line-height: 1.1;
 }
 
 .time-block .hourly-asma span {
   color: #eef5ff;
-  font-size: 1.05rem;
+  font-size: 0.92rem;
   font-weight: 800;
 }
 
 .time-block .hourly-asma em {
   color: rgba(238, 245, 255, 0.68);
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   font-style: normal;
   font-weight: 700;
 }
@@ -507,12 +503,12 @@ textarea {
 }
 
 .next-prayer-band {
-  margin-top: 20px;
-  padding: 18px 26px;
+  margin-top: 14px;
+  padding: 12px 18px;
   display: grid;
   grid-template-columns: 1fr 1.4fr 1fr;
   align-items: center;
-  border-radius: 20px;
+  border-radius: 16px;
   background: rgba(255, 255, 255, 0.055);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
@@ -526,29 +522,29 @@ textarea {
 .next-prayer-main span,
 .sun-pill span {
   color: rgba(246, 250, 255, 0.86);
-  font-size: 0.98rem;
+  font-size: 0.82rem;
 }
 
 .next-prayer-main h2 {
   margin: 0;
-  font-size: 1.85rem;
+  font-size: 1.5rem;
   color: #fff;
 }
 
 .next-prayer-main strong {
   color: #4f8cff;
-  font-size: 2rem;
+  font-size: 1.65rem;
 }
 
 .sun-pill {
   display: grid;
-  gap: 8px;
+  gap: 5px;
   color: #fff;
   font-weight: 800;
 }
 
 .sun-pill strong {
-  font-size: 1.2rem;
+  font-size: 1rem;
   font-weight: 500;
 }
 
@@ -556,21 +552,65 @@ textarea {
   text-align: right;
 }
 
+.forbidden-times {
+  display: grid;
+  gap: 7px;
+  margin-top: 10px;
+  padding: 9px 12px;
+  border-radius: 14px;
+  background: rgba(255, 205, 86, 0.08);
+  border: 1px solid rgba(255, 205, 86, 0.18);
+}
+
+.forbidden-times > span {
+  color: #ffd166;
+  font-size: 0.7rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.forbidden-times > div {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.forbidden-times small {
+  display: grid;
+  gap: 2px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  color: rgba(246, 250, 255, 0.78);
+  background: rgba(255, 255, 255, 0.055);
+  font-size: 0.72rem;
+}
+
+.forbidden-times small.active {
+  color: #fff7dc;
+  background: rgba(255, 205, 86, 0.2);
+  box-shadow: inset 0 0 0 1px rgba(255, 205, 86, 0.32);
+}
+
+.forbidden-times strong {
+  color: #fff;
+  font-size: 0.75rem;
+}
+
 .prayer-strip {
-  margin-top: 18px;
+  margin-top: 12px;
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   overflow: hidden;
-  border-radius: 18px;
+  border-radius: 15px;
   background: rgba(255, 255, 255, 0.045);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .prayer-chip {
   display: grid;
-  gap: 8px;
-  padding: 16px 14px;
-  font-size: 0.98rem;
+  gap: 5px;
+  padding: 10px 12px;
+  font-size: 0.86rem;
   color: #edf5ff;
   border-right: 1px solid rgba(255, 255, 255, 0.08);
 }
@@ -1303,6 +1343,7 @@ label input[type="checkbox"] {
   .bottom-row,
   .salah-top,
   .next-prayer-band,
+  .forbidden-times > div,
   .prayer-strip,
   .compact-tools {
     grid-template-columns: 1fr;
