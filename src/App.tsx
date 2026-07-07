@@ -147,7 +147,7 @@ export default function App() {
 
         <div className="center-column">
           {prayerTimes ? (
-            <Dashboard now={now} language={settings.language} timeFormat={settings.timeFormat} prayerTimes={prayerTimes} />
+            <Dashboard now={now} language={settings.language} prayerTimes={prayerTimes} />
           ) : (
             <section className="glass loading">Loading prayer dashboard...</section>
           )}

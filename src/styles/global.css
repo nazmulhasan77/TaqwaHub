@@ -455,6 +455,33 @@ textarea {
   font-size: 1.15rem;
 }
 
+.hourly-asma {
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+  text-align: center;
+}
+
+.time-block .hourly-asma strong {
+  color: #f4f8ff;
+  font-size: clamp(2.3rem, 4vw, 3.4rem);
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.time-block .hourly-asma span {
+  color: #eef5ff;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.time-block .hourly-asma em {
+  color: rgba(238, 245, 255, 0.68);
+  font-size: 0.9rem;
+  font-style: normal;
+  font-weight: 700;
+}
+
 .asma-block {
   gap: 4px;
   text-align: center;

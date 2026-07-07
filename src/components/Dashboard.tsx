@@ -1,3 +1,4 @@
+import { getHourlyAsmaName } from '../data/asmaulHusna';
 import { prayerLabels } from '../data/translations';
 import { getUpcomingIslamicEvent } from '../services/eventService';
 import type { Language, PrayerTimes } from '../types';
@@ -7,29 +8,17 @@ import { getCurrentOrNextPrayer, getNextPrayer, prayerOrder } from '../utils/pra
 interface Props {
   now: Date;
   language: Language;
-  timeFormat: '12h' | '24h';
   prayerTimes: PrayerTimes;
 }
 
-export default function Dashboard({ now, language, timeFormat, prayerTimes }: Props) {
+export default function Dashboard({ now, language, prayerTimes }: Props) {
   const hijri = prayerTimes.hijri;
   const event = getUpcomingIslamicEvent(hijri, language);
+  const asmaName = getHourlyAsmaName(now);
   const { current } = getCurrentOrNextPrayer(prayerTimes, now);
   const next = getNextPrayer(prayerTimes, now);
   const countdown = secondsToClock((next.at.getTime() - now.getTime()) / 1000);
-  const date = new Intl.DateTimeFormat('en-US', { day: '2-digit', month: 'short', year: 'numeric' }).format(now);
   const weekday = new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(now);
-  const clock = new Intl.DateTimeFormat('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: timeFormat === '12h'
-  }).format(now).replace(/\s?(AM|PM)$/i, '');
-  const period = timeFormat === '12h'
-    ? new Intl.DateTimeFormat('en-US', { hour: 'numeric', hour12: true })
-      .formatToParts(now)
-      .find((part) => part.type === 'dayPeriod')?.value
-    : '';
 
   return (
     <section className="salah-hero glass">
@@ -40,9 +29,11 @@ export default function Dashboard({ now, language, timeFormat, prayerTimes }: Pr
           <strong>{weekday} {dayPart(now)}</strong>
         </div>
         <div className="time-block">
-          <span>{date}</span>
-          <strong>{clock}</strong>
-          {period && <em>{period}</em>}
+          <div className="hourly-asma" aria-label="Hourly name of Allah">
+            <strong lang="ar" dir="rtl">{asmaName.arabic}</strong>
+            <span lang="bn">{asmaName.bangla}</span>
+            <em>{asmaName.english}</em>
+          </div>
         </div>
         <div className="event-block">
           <strong>{event.label}</strong>
