@@ -672,6 +672,12 @@ textarea {
   border: 0;
   background: transparent;
   padding: 0;
+  font-size: 1.1rem;
+  color: #eaf1ff;
+}
+
+.search-bar input::placeholder {
+  color: rgba(234, 241, 255, 0.6);
 }
 
 .search-bar button {
