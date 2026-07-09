@@ -4,6 +4,7 @@ export const defaultSettings: Settings = {
   city: 'Dhaka',
   country: 'Bangladesh',
   method: 3,
+  madhab: 'hanafi',
   language: 'en',
   timeFormat: '12h',
   clockMode: 'analog',

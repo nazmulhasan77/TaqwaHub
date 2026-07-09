@@ -137,6 +137,7 @@ export default function App() {
     settings.city,
     settings.country,
     settings.method,
+    settings.madhab,
     settings.hijriAdjustment,
     settings.notificationsEnabled,
     settings.notificationMinutes,

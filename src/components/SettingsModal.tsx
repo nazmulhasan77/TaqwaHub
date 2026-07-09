@@ -1,4 +1,4 @@
-import type { Settings, BackgroundTheme, WordChangeInterval } from '../types';
+import type { Settings, BackgroundTheme, WordChangeInterval, Madhab } from '../types';
 import LanguageToggle from './LanguageToggle';
 import { clearAllStored } from '../services/storageService';
 
@@ -47,6 +47,11 @@ const WORD_INTERVALS: { value: WordChangeInterval; label: string }[] = [
   { value: '6h', label: 'Every 6 hours' },
   { value: '3h', label: 'Every 3 hours' },
   { value: 'hourly', label: 'Hourly' },
+];
+
+const MADHABS: { value: Madhab; label: string }[] = [
+  { value: 'hanafi', label: 'Hanafi' },
+  { value: 'shafi', label: 'Shafi' },
 ];
 
 interface Props {
@@ -118,6 +123,16 @@ export default function SettingsModal({ open, settings, onClose, onSave }: Props
               {CALCULATION_METHODS.map((method) => (
                 <option key={method.value} value={method.value}>
                   {method.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Madhab (Asr Calculation)
+            <select value={settings.madhab} onChange={(e) => update('madhab', e.target.value as Madhab)}>
+              {MADHABS.map((madhab) => (
+                <option key={madhab.value} value={madhab.value}>
+                  {madhab.label}
                 </option>
               ))}
             </select>

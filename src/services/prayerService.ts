@@ -69,10 +69,12 @@ function applyHijriAdjustment(prayerTimes: PrayerTimes, adjustment: number): Pra
 }
 
 function cacheKey(settings: Settings, date = new Date()) {
+  // Convert madhab string to numeric school value for consistency (1 = Hanafi, 0 = Shafi)
+  const schoolValue = settings.madhab === 'hanafi' ? 1 : 0;
   if (settings.autoLocationEnabled && settings.latitude && settings.longitude) {
-    return `prayer:${dateKey(date)}:${settings.latitude}:${settings.longitude}:${settings.method}`;
+    return `prayer:${dateKey(date)}:${settings.latitude}:${settings.longitude}:${settings.method}:${schoolValue}`;
   }
-  return `prayer:${dateKey(date)}:${settings.city.toLowerCase()}:${settings.country.toLowerCase()}:${settings.method}`;
+  return `prayer:${dateKey(date)}:${settings.city.toLowerCase()}:${settings.country.toLowerCase()}:${settings.method}:${schoolValue}`;
 }
 
 function buildPrayerUrl(settings: Settings, date = new Date()): URL {
@@ -82,11 +84,17 @@ function buildPrayerUrl(settings: Settings, date = new Date()): URL {
     url.searchParams.set('latitude', String(settings.latitude));
     url.searchParams.set('longitude', String(settings.longitude));
     url.searchParams.set('method', String(settings.method));
+    // Convert madhab string to API school parameter (1 = Hanafi, 0 = Shafi)
+    const schoolValue = settings.madhab === 'hanafi' ? 1 : 0;
+    url.searchParams.set('school', String(schoolValue));
   } else {
     url = new URL(`https://api.aladhan.com/v1/timingsByCity/${aladhanDate(date)}`);
     url.searchParams.set('city', settings.city);
     url.searchParams.set('country', settings.country);
     url.searchParams.set('method', String(settings.method));
+    // Convert madhab string to API school parameter (1 = Hanafi, 0 = Shafi)
+    const schoolValue = settings.madhab === 'hanafi' ? 1 : 0;
+    url.searchParams.set('school', String(schoolValue));
   }
   return url;
 }

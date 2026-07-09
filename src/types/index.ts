@@ -3,11 +3,13 @@ export type PrayerName = 'Fajr' | 'Dhuhr' | 'Asr' | 'Maghrib' | 'Isha';
 
 export type BackgroundTheme = 'default' | 'ocean' | 'forest' | 'sunset' | 'midnight';
 export type WordChangeInterval = 'daily' | '12h' | '6h' | '3h' | 'hourly';
+export type Madhab = 'hanafi' | 'shafi';
 
 export interface Settings {
   city: string;
   country: string;
   method: number;
+  madhab: Madhab;
   language: Language;
   timeFormat: '12h' | '24h';
   clockMode: 'analog' | 'digital';
