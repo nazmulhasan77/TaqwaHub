@@ -12,7 +12,6 @@ import PrayerTimesCard from './components/PrayerTimesCard';
 import ProductivityTasks from './components/ProductivityTasks';
 import QuranCard from './components/QuranCard';
 import SalahTracker from './components/SalahTracker';
-import SearchBar from './components/SearchBar';
 import QuickLinks from './components/QuickLinks';
 import SettingsModal from './components/SettingsModal';
 import { hadithSamples } from './data/hadithSamples';
@@ -204,7 +203,6 @@ export default function App() {
           ) : (
             <section className="glass loading">Loading prayer dashboard...</section>
           )}
-          <SearchBar />
           <QuickLinks quickLinks={settings.quickLinks} onAddLink={addQuickLink} />
         </div>
 

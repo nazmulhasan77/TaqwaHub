@@ -14,7 +14,7 @@ export const defaultSettings: Settings = {
   showHadith: true,
   showDua: true,
   showProductivity: true,
-  autoLocationEnabled: true,
+  autoLocationEnabled: false,
   latitude: null,
   longitude: null,
   customPrayerTimes: {

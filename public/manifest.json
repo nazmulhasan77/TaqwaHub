@@ -1,12 +1,12 @@
 {
   "manifest_version": 3,
   "name": "Taqwa Hub - New Tab",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Every New Tab, A Step Closer to Allah.",
   "chrome_url_overrides": {
     "newtab": "index.html"
   },
-  "permissions": ["storage", "notifications", "alarms", "search"],
+  "permissions": ["storage", "notifications", "alarms"],
   "host_permissions": [
     "https://api.aladhan.com/*",
     "https://api.alquran.cloud/*",
