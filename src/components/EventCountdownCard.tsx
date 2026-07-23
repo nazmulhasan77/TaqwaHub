@@ -8,7 +8,9 @@ interface Props {
 
 export default function EventCountdownCard({ prayerTimes, language }: Props) {
   const event = getUpcomingIslamicEvent(prayerTimes.hijri, language);
-  const ayyam = getAyyamReminder(prayerTimes.hijri, language);
+  const ayyam = event.id === 'aiyame-bij'
+    ? null
+    : getAyyamReminder(prayerTimes.hijri, language);
   const suffix = language === 'bn' ? 'দিন বাকি' : event.days === 0 ? 'today' : `in ${event.days} days`;
   return (
     <section className="glass card compact">

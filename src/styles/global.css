@@ -1655,3 +1655,264 @@ label input[type="checkbox"] {
 .dua-one-line {
   margin-top: 24px;
 }
+/* v1.2 feature pack */
+:root { --accent: #71a8ff; --glass-blur: 22px; }
+.glass { backdrop-filter: blur(var(--glass-blur)); }
+.brand-mark span,.event-block,.hijri-block,.digital-clock strong,.ramadan-countdown strong,.big-toggle.active,.section-title em { color: var(--accent); }
+.primary,.link-category-tabs button.active,.hijri-day.today { background: var(--accent) !important; color: #06101f !important; }
+.tools-drawer { max-height: min(78vh, 760px); overflow: auto; }
+.tools-drawer summary small { opacity: .55; font-size: .72rem; }
+.tool-wrapper { position: relative; min-width: 0; cursor: grab; }
+.tool-wrapper:active { cursor: grabbing; }
+.drag-handle { display: block; width: max-content; max-width: 90%; margin: 0 auto -10px; padding: 4px 12px; border-radius: 999px; background: rgba(4,10,24,.8); color: rgba(238,245,255,.62); font-size: .7rem; position: relative; z-index: 2; }
+.feature-card { min-height: 220px; }
+.hijri-calendar-grid { display: grid; grid-template-columns: repeat(6,1fr); gap: 6px; margin-top: 10px; }
+.hijri-day { min-height: 52px; border-radius: 10px; padding: 6px; display: grid; align-content: start; background: rgba(255,255,255,.055); border: 1px solid rgba(255,255,255,.08); }
+.hijri-day strong { font-size: .82rem; }
+.hijri-day small { font-size: .58rem; line-height: 1.1; color: #bcd4ff; overflow: hidden; }
+.hijri-day.event { border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
+.hijri-day.today small { color: #06101f; }
+.big-toggle { width: 100%; border-radius: 14px; padding: 14px; margin: 10px 0; }
+.big-toggle.active { background: color-mix(in srgb, var(--accent) 18%, transparent); border-color: var(--accent); }
+.mini-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.mini-stats span { padding: 10px; border-radius: 12px; background: rgba(255,255,255,.06); display: grid; gap: 3px; }
+.mini-stats strong { font-size: 1.45rem; color: var(--accent); }
+.highlight-note { padding: 8px 10px; border-radius: 10px; background: color-mix(in srgb, var(--accent) 13%, transparent); }
+.salah-bars { height: 105px; display: grid; grid-template-columns: repeat(7,1fr); gap: 8px; align-items: end; margin: 12px 0; }
+.salah-bars div { height: 100%; display: flex; flex-direction: column; justify-content: flex-end; gap: 5px; text-align: center; }
+.salah-bars span { min-height: 6px; border-radius: 8px 8px 3px 3px; background: linear-gradient(to top,var(--accent),#b5d1ff); }
+.salah-bars small { opacity: .55; font-size: .65rem; }
+.goal-progress { height: 8px; overflow: hidden; border-radius: 999px; background: rgba(255,255,255,.08); margin: 10px 0; }
+.goal-progress span { display: block; height: 100%; border-radius: inherit; background: var(--accent); transition: width .25s ease; }
+.ramadan-card { background: linear-gradient(145deg,rgba(46,122,91,.33),rgba(255,255,255,.055)); }
+.ramadan-countdown { display: grid; gap: 5px; text-align: center; margin: 18px 0; }
+.ramadan-countdown strong { font-size: 2.2rem; }
+.link-category-tabs { display: flex; gap: 6px; overflow-x: auto; padding: 0 2px 8px; }
+.link-category-tabs button { font-size: .68rem; padding: 5px 10px; white-space: nowrap; }
+.dhikr-item.completed { border-color: var(--accent); }
+.advanced-modal { width: min(980px,94vw); max-height: 90vh; overflow: auto; }
+.settings-section { padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,.1); }
+.settings-section h4 { margin: 0 0 12px; color: #cfe0ff; }
+.notification-grid { display: grid; gap: 7px; }
+.notification-row { display: grid; grid-template-columns: 100px 1fr 1.4fr 1fr; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; background: rgba(255,255,255,.045); }
+.notification-row label { display: flex; align-items: center; gap: 6px; }
+.notification-row input[type=number] { width: 70px; }
+.inline { display: flex; align-items: center; gap: 8px; }
+.custom-event-row { display: grid; grid-template-columns: 1.2fr 1.2fr 70px 70px 90px 38px; gap: 7px; margin-bottom: 7px; }
+.quick-link-item { grid-template-columns: 1fr 1.3fr .8fr .7fr 38px !important; }
+.jummah-banner { width: min(850px,92vw); margin: 14px auto; }
+.ramadan-glow { position: fixed; inset: auto 5% 2% auto; width: 130px; height: 130px; pointer-events: none; border-radius: 50%; box-shadow: 0 0 90px rgba(94,255,177,.2); }
+@media(max-width:900px){.notification-row{grid-template-columns:1fr 1fr}.custom-event-row{grid-template-columns:1fr 1fr}.hijri-calendar-grid{grid-template-columns:repeat(5,1fr)}}
+
+/* v1.2.1 focused More Tools and reliable location settings */
+.primary,
+.hijri-day.today {
+  background: var(--accent) !important;
+  color: #06101f !important;
+}
+
+.tools-drawer.hijri-only-drawer {
+  width: min(680px, calc(100vw - 60px));
+  max-height: none;
+  overflow: visible;
+}
+
+.tools-drawer.hijri-only-drawer summary {
+  width: max-content;
+  min-width: 190px;
+  margin-left: auto;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  list-style: none;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(78, 112, 178, 0.34), rgba(6, 15, 28, 0.92));
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.34);
+  backdrop-filter: blur(var(--glass-blur));
+  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+}
+
+.tools-drawer.hijri-only-drawer summary::-webkit-details-marker {
+  display: none;
+}
+
+.tools-drawer.hijri-only-drawer summary:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  background: linear-gradient(145deg, color-mix(in srgb, var(--accent) 20%, rgba(78, 112, 178, 0.34)), rgba(6, 15, 28, 0.96));
+}
+
+.tools-summary-icon {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  color: var(--accent);
+  font-size: 1.25rem;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+.tools-summary-copy {
+  display: grid;
+  gap: 2px;
+  text-align: left;
+  line-height: 1.1;
+}
+
+.tools-summary-copy strong {
+  font-size: 0.86rem;
+}
+
+.tools-summary-copy small {
+  opacity: 0.62 !important;
+  font-size: 0.68rem !important;
+}
+
+.tools-summary-chevron {
+  margin-left: auto;
+  opacity: 0.7;
+  transition: transform 180ms ease;
+}
+
+.tools-drawer[open] .tools-summary-chevron {
+  transform: rotate(180deg);
+}
+
+.hijri-tools-panel {
+  max-height: min(70vh, 690px);
+  margin-top: 12px;
+  padding: 14px;
+  overflow: auto;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 24px;
+  background: rgba(4, 11, 24, 0.94);
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.54);
+  backdrop-filter: blur(calc(var(--glass-blur) + 4px));
+  transform-origin: bottom right;
+  animation: hijri-panel-in 180ms ease-out;
+}
+
+.hijri-tools-panel .feature-card {
+  margin: 0;
+  min-height: auto;
+  box-shadow: none;
+  background: linear-gradient(145deg, rgba(78, 112, 178, 0.2), rgba(255, 255, 255, 0.04));
+}
+
+@keyframes hijri-panel-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.location-mode {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 5px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.location-mode button {
+  border-radius: 12px;
+}
+
+.location-mode button.active {
+  color: #06101f;
+  font-weight: 800;
+  background: var(--accent);
+  border-color: transparent;
+}
+
+.location-status {
+  min-height: 38px;
+  margin-bottom: 12px;
+  padding: 9px 12px;
+  display: flex;
+  align-items: center;
+  border-radius: 12px;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: rgba(238, 245, 255, 0.74);
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.location-status.loading {
+  color: #cfe0ff;
+  border-color: rgba(113, 168, 255, 0.3);
+}
+
+.location-status.success {
+  color: #a7f3d0;
+  border-color: rgba(52, 211, 153, 0.32);
+  background: rgba(16, 185, 129, 0.08);
+}
+
+.location-status.error {
+  color: #fecaca;
+  border-color: rgba(248, 113, 113, 0.36);
+  background: rgba(239, 68, 68, 0.08);
+}
+
+input:disabled,
+select:disabled,
+button:disabled {
+  opacity: 0.52;
+  cursor: not-allowed;
+}
+
+.quick-link-item {
+  grid-template-columns: minmax(120px, 1fr) minmax(180px, 1.5fr) minmax(105px, 0.7fr) 38px !important;
+}
+
+.daily-action-row {
+  display: grid;
+  grid-template-columns: 70px 1fr 1fr 38px;
+  gap: 7px;
+  margin-bottom: 7px;
+}
+
+.settings-heading {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  padding: 8px 0 12px;
+  background: linear-gradient(to bottom, rgba(7, 15, 31, 0.98) 72%, transparent);
+}
+
+.settings-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 4;
+  justify-content: flex-end;
+  padding: 12px 0 4px;
+  background: linear-gradient(to top, rgba(7, 15, 31, 0.98) 72%, transparent);
+}
+
+@media (max-width: 700px) {
+  .tools-drawer.hijri-only-drawer {
+    right: 18px;
+    bottom: 18px;
+    width: calc(100vw - 36px);
+  }
+
+  .hijri-tools-panel {
+    max-height: 72vh;
+    padding: 9px;
+  }
+
+  .quick-link-item,
+  .daily-action-row {
+    grid-template-columns: 1fr;
+  }
+
+  .location-mode {
+    grid-template-columns: 1fr;
+  }
+}

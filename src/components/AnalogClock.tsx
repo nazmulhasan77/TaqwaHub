@@ -4,9 +4,10 @@ import { formatClock, formatDate } from '../utils/dateUtils';
 interface Props {
   now: Date;
   clockMode: Settings['clockMode'];
+  timeFormat: Settings['timeFormat'];
 }
 
-export default function AnalogClock({ now, clockMode }: Props) {
+export default function AnalogClock({ now, clockMode, timeFormat }: Props) {
   const seconds = now.getSeconds();
   const minutes = now.getMinutes() + seconds / 60;
   const hours = (now.getHours() % 12) + minutes / 60;
@@ -34,7 +35,7 @@ export default function AnalogClock({ now, clockMode }: Props) {
       ) : (
         <div className="digital-clock glass">
           <span>{new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(now)}</span>
-          <strong>{formatClock(now, '12h')}</strong>
+          <strong>{formatClock(now, timeFormat)}</strong>
         </div>
       )}
 

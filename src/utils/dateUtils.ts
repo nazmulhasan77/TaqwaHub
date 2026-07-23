@@ -1,5 +1,6 @@
 export function dateKey(date = new Date()): string {
-  return date.toISOString().slice(0, 10);
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+  return local.toISOString().slice(0, 10);
 }
 
 export function aladhanDate(date = new Date()): string {
@@ -8,20 +9,12 @@ export function aladhanDate(date = new Date()): string {
 
 export function formatClock(date: Date, format: '12h' | '24h'): string {
   return new Intl.DateTimeFormat('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: format === '12h'
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: format === '12h'
   }).format(date);
 }
 
 export function formatDate(date: Date): string {
-  return new Intl.DateTimeFormat('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric'
-  }).format(date);
+  return new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }).format(date);
 }
 
 export function dayPart(date: Date): string {
@@ -46,11 +39,13 @@ export function deterministicIndex(seed: string, length: number): number {
   return hash % length;
 }
 
-export function formatTime12h(time: string): string {
-  const [hourStr, minuteStr] = time.split(':').map(Number);
-  let hour = hourStr;
-  const period = hour >= 12 ? 'PM' : 'AM';
-  hour = hour % 12;
-  hour = hour ? hour : 12;
-  return `${String(hour).padStart(2, '0')}:${String(minuteStr).padStart(2, '0')} ${period}`;
+export function formatTime(time: string, format: '12h' | '24h'): string {
+  const clean = time.split(' ')[0];
+  const [hourRaw, minuteRaw] = clean.split(':').map(Number);
+  if (format === '24h') return `${String(hourRaw).padStart(2, '0')}:${String(minuteRaw).padStart(2, '0')}`;
+  const period = hourRaw >= 12 ? 'PM' : 'AM';
+  const hour = hourRaw % 12 || 12;
+  return `${String(hour).padStart(2, '0')}:${String(minuteRaw).padStart(2, '0')} ${period}`;
 }
+
+export const formatTime12h = (time: string) => formatTime(time, '12h');

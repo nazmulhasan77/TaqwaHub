@@ -8,7 +8,7 @@ interface Props {
 
 export default function QuickLinks({ quickLinks, onAddLink }: Props) {
   return (
-    <section className="quick-links">
+    <section className="quick-links" aria-label="Quick links">
       {quickLinks.map((link) => (
         <a
           key={link.id}
@@ -18,14 +18,14 @@ export default function QuickLinks({ quickLinks, onAddLink }: Props) {
           rel="noopener noreferrer"
         >
           {link.useFavicon ? (
-            <img 
-              src={getFaviconUrl(link.url)} 
-              alt="" 
+            <img
+              src={getFaviconUrl(link.url)}
+              alt=""
               className="quick-link-icon quick-link-favicon"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
+              onError={(event) => {
+                const target = event.currentTarget;
                 target.style.display = 'none';
-                const fallback = target.nextElementSibling as HTMLElement;
+                const fallback = target.nextElementSibling as HTMLElement | null;
                 if (fallback) fallback.style.display = 'inline';
               }}
             />
@@ -37,7 +37,7 @@ export default function QuickLinks({ quickLinks, onAddLink }: Props) {
         </a>
       ))}
       {onAddLink && (
-        <button onClick={onAddLink} className="quick-link quick-link-add glass">
+        <button onClick={onAddLink} className="quick-link quick-link-add glass" type="button">
           <span className="quick-link-icon">+</span>
           <span className="quick-link-name">Add</span>
         </button>

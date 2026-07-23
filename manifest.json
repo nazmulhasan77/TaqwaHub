@@ -1,12 +1,17 @@
 {
   "manifest_version": 3,
-  "name": "Taqwa Hub - New Tab",
-  "version": "1.0.3",
+  "name": "TaqwaHub - Islamic Productivity New Tab",
+  "version": "1.2.1",
   "description": "Every New Tab, A Step Closer to Allah.",
   "chrome_url_overrides": {
     "newtab": "index.html"
   },
-  "permissions": ["storage", "notifications", "alarms"],
+  "permissions": [
+    "storage",
+    "geolocation",
+    "notifications",
+    "alarms"
+  ],
   "host_permissions": [
     "https://api.aladhan.com/*",
     "https://api.alquran.cloud/*",
@@ -20,5 +25,9 @@
     "16": "icons/icon.png",
     "48": "icons/icon.png",
     "128": "icons/icon.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "TaqwaHub"
   }
 }

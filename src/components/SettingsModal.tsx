@@ -1,58 +1,34 @@
-import type { Settings, BackgroundTheme, WordChangeInterval, Madhab, QuickLink } from '../types';
+import { useEffect, useRef, useState } from 'react';
+import type {
+  BackgroundTheme,
+  Madhab,
+  PrayerName,
+  QuickLink,
+  Settings,
+  WordChangeInterval
+} from '../types';
 import LanguageToggle from './LanguageToggle';
-import { clearAllStored } from '../services/storageService';
+import { clearAllStored, exportAllStored, importAllStored } from '../services/storageService';
 
-const CALCULATION_METHODS = [
-  { value: 1, label: 'University of Islamic Sciences, Karachi' },
-  { value: 2, label: 'Islamic Society of North America (ISNA)' },
-  { value: 3, label: 'Muslim World League (MWL)' },
-  { value: 4, label: 'Umm al-Qura University, Makkah' },
-  { value: 5, label: 'Egyptian General Authority of Survey' },
-  { value: 7, label: 'Institute of Geophysics, University of Tehran' },
+const METHODS = [
+  { value: 1, label: 'Karachi' },
+  { value: 2, label: 'ISNA' },
+  { value: 3, label: 'Muslim World League' },
+  { value: 4, label: 'Umm al-Qura' },
+  { value: 5, label: 'Egyptian Survey' },
   { value: 8, label: 'Gulf Region' },
   { value: 9, label: 'Kuwait' },
   { value: 10, label: 'Qatar' },
-  { value: 11, label: 'Majlis Ugama Islam Singapura (MUIS)' },
-  { value: 12, label: 'Ministry of Religious Affairs, Indonesia' },
-  { value: 13, label: 'Morocco' },
-  { value: 14, label: 'Turkey' },
-  { value: 15, label: 'Directorate of Religious Affairs, Russia' },
-  { value: 16, label: 'Dubai' },
-  { value: 17, label: 'Jakim, Malaysia' },
-  { value: 18, label: 'Ministry of Awqaf, Jordan' },
-  { value: 19, label: 'Ministry of Awqaf and Islamic Affairs, Palestine' },
-  { value: 20, label: 'Religious Administration of Muslims of Ukraine' },
-  { value: 21, label: 'Ministry of Religious Affairs, Tunisia' },
-  { value: 22, label: 'Algerian Ministry of Religious Affairs and Awqaf' },
-  { value: 23, label: 'Ministry of Awqaf, Oman' },
-  { value: 24, label: 'Deutsche Islam Konferenz' },
-  { value: 25, label: 'Birmingham' },
-  { value: 26, label: 'Baku' },
-  { value: 27, label: 'Ministry of Religious Affairs, Bosnia and Herzegovina' },
-  { value: 28, label: 'Islamic Community of the Republic of Slovenia' },
-  { value: 99, label: 'Custom' },
+  { value: 11, label: 'Singapore' },
+  { value: 12, label: 'Indonesia' },
+  { value: 17, label: 'Malaysia' },
+  { value: 99, label: 'Custom' }
 ];
+const THEMES: BackgroundTheme[] = ['default', 'ocean', 'forest', 'sunset', 'midnight'];
+const INTERVALS: WordChangeInterval[] = ['daily', '12h', '6h', '3h', 'hourly'];
+const PRAYERS: PrayerName[] = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
 
-const BACKGROUND_THEMES: { value: BackgroundTheme; label: string }[] = [
-  { value: 'default', label: 'Default' },
-  { value: 'ocean', label: 'Ocean' },
-  { value: 'forest', label: 'Forest' },
-  { value: 'sunset', label: 'Sunset' },
-  { value: 'midnight', label: 'Midnight' },
-];
-
-const WORD_INTERVALS: { value: WordChangeInterval; label: string }[] = [
-  { value: 'daily', label: 'Daily' },
-  { value: '12h', label: 'Every 12 hours' },
-  { value: '6h', label: 'Every 6 hours' },
-  { value: '3h', label: 'Every 3 hours' },
-  { value: 'hourly', label: 'Hourly' },
-];
-
-const MADHABS: { value: Madhab; label: string }[] = [
-  { value: 'hanafi', label: 'Hanafi' },
-  { value: 'shafi', label: 'Shafi' },
-];
+type LocationStatus = { kind: 'idle' | 'loading' | 'success' | 'error'; message: string };
 
 interface Props {
   open: boolean;
@@ -62,192 +38,412 @@ interface Props {
 }
 
 export default function SettingsModal({ open, settings, onClose, onSave }: Props) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [draft, setDraft] = useState<Settings>(settings);
+  const [locationStatus, setLocationStatus] = useState<LocationStatus>({ kind: 'idle', message: '' });
+
+  useEffect(() => {
+    if (!open) return;
+    setDraft(settings);
+    setLocationStatus(
+      settings.autoLocationEnabled && settings.latitude != null && settings.longitude != null
+        ? {
+            kind: 'success',
+            message: `Current location ready (${settings.latitude.toFixed(4)}, ${settings.longitude.toFixed(4)})`
+          }
+        : { kind: 'idle', message: 'Choose city/country or use your current location.' }
+    );
+  }, [open, settings]);
+
   if (!open) return null;
-  const update = <K extends keyof Settings>(key: K, value: Settings[K]) => onSave({ ...settings, [key]: value });
-  
-  const updateCustomPrayerTime = (prayer: keyof Settings['customPrayerTimes'], time: string) => {
-    update('customPrayerTimes', {
-      ...settings.customPrayerTimes,
-      [prayer]: time || null
-    });
+
+  const update = <K extends keyof Settings>(key: K, value: Settings[K]) => {
+    setDraft((current) => ({ ...current, [key]: value }));
   };
 
-  const addQuickLink = () => {
-    const newLink: QuickLink = {
-      id: Date.now().toString(),
-      name: 'New Link',
-      url: 'https://',
-      icon: '🔗',
-      useFavicon: true
-    };
-    update('quickLinks', [...settings.quickLinks, newLink]);
+  const updateLink = (id: string, field: keyof QuickLink, value: string | boolean) => {
+    update(
+      'quickLinks',
+      draft.quickLinks.map((link) => (link.id === id ? { ...link, [field]: value } : link))
+    );
   };
 
-  const removeQuickLink = (id: string) => {
-    update('quickLinks', settings.quickLinks.filter(link => link.id !== id));
+  const useCityLocation = () => {
+    setDraft((current) => ({
+      ...current,
+      autoLocationEnabled: false,
+      latitude: null,
+      longitude: null
+    }));
+    setLocationStatus({ kind: 'idle', message: 'Enter a valid city and country, then press Apply settings.' });
   };
 
-  const updateQuickLink = (id: string, field: keyof QuickLink, value: string | boolean) => {
-    update('quickLinks', settings.quickLinks.map(link =>
-      link.id === id ? { ...link, [field]: value } : link
-    ));
-  };
-  
-  const requestLocation = async () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const newSettings = {
-            ...settings,
-            autoLocationEnabled: true,
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude
-          };
-          onSave(newSettings);
-        },
-        (error) => {
-          console.error('Geolocation error:', error);
-        }
-      );
+  const requestLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationStatus({ kind: 'error', message: 'Location is not supported by this browser.' });
+      return;
     }
+
+    setLocationStatus({ kind: 'loading', message: 'Detecting your current location…' });
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const latitude = Number(position.coords.latitude.toFixed(6));
+        const longitude = Number(position.coords.longitude.toFixed(6));
+        setDraft((current) => ({
+          ...current,
+          autoLocationEnabled: true,
+          latitude,
+          longitude
+        }));
+        setLocationStatus({
+          kind: 'success',
+          message: `Location detected (${latitude.toFixed(4)}, ${longitude.toFixed(4)}). Press Apply settings.`
+        });
+      },
+      (locationError) => {
+        const messages: Record<number, string> = {
+          1: 'Location permission was denied. Allow location for this extension or use city/country.',
+          2: 'Your current location could not be determined. Try again or use city/country.',
+          3: 'Location detection timed out. Try again or use city/country.'
+        };
+        setLocationStatus({
+          kind: 'error',
+          message: messages[locationError.code] || 'Location detection failed. Use city/country instead.'
+        });
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 300000 }
+    );
+  };
+
+  const exportData = async () => {
+    const blob = new Blob([JSON.stringify(await exportAllStored(), null, 2)], { type: 'application/json' });
+    const anchor = document.createElement('a');
+    anchor.href = URL.createObjectURL(blob);
+    anchor.download = `taqwahub-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    anchor.click();
+    URL.revokeObjectURL(anchor.href);
+  };
+
+  const importData = async (file?: File) => {
+    if (!file) return;
+    try {
+      const data = JSON.parse(await file.text()) as Record<string, unknown>;
+      await importAllStored(data);
+      location.reload();
+    } catch {
+      setLocationStatus({ kind: 'error', message: 'The selected backup file is not valid JSON.' });
+    }
+  };
+
+  const applySettings = () => {
+    const city = draft.city.trim();
+    const country = draft.country.trim();
+
+    if (draft.autoLocationEnabled && (draft.latitude == null || draft.longitude == null)) {
+      setLocationStatus({ kind: 'error', message: 'Detect your current location before applying settings.' });
+      return;
+    }
+    if (!draft.autoLocationEnabled && (!city || !country)) {
+      setLocationStatus({ kind: 'error', message: 'City and country are required.' });
+      return;
+    }
+
+    onSave({ ...draft, city, country });
+    onClose();
   };
 
   return (
     <div className="modal-backdrop">
-      <section className="glass modal">
-        <div className="section-title">
+      <section className="glass modal advanced-modal" role="dialog" aria-modal="true" aria-label="Settings">
+        <div className="section-title settings-heading">
           <span>Settings</span>
-          <button onClick={onClose}>×</button>
+          <button onClick={onClose} type="button" aria-label="Close settings">×</button>
         </div>
-        <div className="form-grid">
-          <label>
-            Auto Location
-            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-              <input type="checkbox" checked={settings.autoLocationEnabled} onChange={(e) => update('autoLocationEnabled', e.target.checked)} />
-              {!settings.latitude && <button onClick={requestLocation}>Enable</button>}
-            </div>
-          </label>
-          {settings.autoLocationEnabled && settings.latitude && settings.longitude ? (
-            <>
-              <label>Latitude<input value={settings.latitude} readOnly /></label>
-              <label>Longitude<input value={settings.longitude} readOnly /></label>
-            </>
-          ) : (
-            <>
-              <label>City<input value={settings.city} onChange={(e) => update('city', e.target.value)} /></label>
-              <label>Country<input value={settings.country} onChange={(e) => update('country', e.target.value)} /></label>
-            </>
-          )}
-          <label>
-            Calculation Method
-            <select value={settings.method} onChange={(e) => update('method', Number(e.target.value))}>
-              {CALCULATION_METHODS.map((method) => (
-                <option key={method.value} value={method.value}>
-                  {method.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Madhab (Asr Calculation)
-            <select value={settings.madhab} onChange={(e) => update('madhab', e.target.value as Madhab)}>
-              {MADHABS.map((madhab) => (
-                <option key={madhab.value} value={madhab.value}>
-                  {madhab.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>Hijri Date Adjustment<input type="number" value={settings.hijriAdjustment} onChange={(e) => update('hijriAdjustment', Number(e.target.value))} /></label>
-          <label>Prayer Alert<select value={settings.notificationMinutes} onChange={(e) => update('notificationMinutes', Number(e.target.value))}><option value={5}>5 min</option><option value={10}>10 min</option><option value={15}>15 min</option></select></label>
-          <label>Clock Mode<select value={settings.clockMode} onChange={(e) => update('clockMode', e.target.value as Settings['clockMode'])}><option value="digital">Digital</option><option value="analog">Analog</option></select></label>
-          <label>Background Theme
-            <select value={settings.backgroundTheme} onChange={(e) => update('backgroundTheme', e.target.value as BackgroundTheme)}>
-              {BACKGROUND_THEMES.map((theme) => (
-                <option key={theme.value} value={theme.value}>
-                  {theme.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>Content Change
-            <select value={settings.wordChangeInterval} onChange={(e) => update('wordChangeInterval', e.target.value as WordChangeInterval)}>
-              {WORD_INTERVALS.map((interval) => (
-                <option key={interval.value} value={interval.value}>
-                  {interval.label}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-        
-        <h4 style={{ margin: '20px 0 10px' }}>Quick Links</h4>
-        <div className="quick-links-settings">
-          {settings.quickLinks.map((link) => (
-            <div key={link.id} className="quick-link-item">
+
+        <div className="settings-section">
+          <h4>Location & Prayer</h4>
+          <div className="location-mode" role="group" aria-label="Location method">
+            <button
+              type="button"
+              className={!draft.autoLocationEnabled ? 'active' : ''}
+              onClick={useCityLocation}
+            >
+              City & Country
+            </button>
+            <button
+              type="button"
+              className={draft.autoLocationEnabled ? 'active' : ''}
+              onClick={requestLocation}
+              disabled={locationStatus.kind === 'loading'}
+            >
+              {locationStatus.kind === 'loading' ? 'Detecting…' : 'Use Current Location'}
+            </button>
+          </div>
+
+          <div className={`location-status ${locationStatus.kind}`} aria-live="polite">
+            {locationStatus.message}
+          </div>
+
+          <div className="form-grid">
+            <label>
+              City
               <input
-                type="text"
-                value={link.name}
-                onChange={(e) => updateQuickLink(link.id, 'name', e.target.value)}
-                placeholder="Name"
-                className="quick-link-input"
-              />
-              <input
-                type="text"
-                value={link.url}
-                onChange={(e) => updateQuickLink(link.id, 'url', e.target.value)}
-                placeholder="URL"
-                className="quick-link-input"
-              />
-              <input
-                type="text"
-                value={link.icon || ''}
-                onChange={(e) => updateQuickLink(link.id, 'icon', e.target.value)}
-                placeholder="Icon (emoji)"
-                className="quick-link-input quick-link-icon-input"
-                disabled={link.useFavicon}
-              />
-              <label className="quick-link-favicon-toggle">
-                <input
-                  type="checkbox"
-                  checked={link.useFavicon || false}
-                  onChange={(e) => updateQuickLink(link.id, 'useFavicon', e.target.checked)}
-                />
-                <span>Auto</span>
-              </label>
-              <button onClick={() => removeQuickLink(link.id)} className="quick-link-remove">×</button>
-            </div>
-          ))}
-          <button onClick={addQuickLink} className="quick-link-settings-add">+ Add Quick Link</button>
-        </div>
-        
-        <h4 style={{ margin: '20px 0 10px' }}>Custom Prayer Times (Jamaat)</h4>
-        <div className="form-grid">
-          {['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'].map((prayer) => (
-            <label key={prayer}>
-              {prayer}
-              <input 
-                type="time" 
-                value={settings.customPrayerTimes[prayer as keyof typeof settings.customPrayerTimes] || ''} 
-                onChange={(e) => updateCustomPrayerTime(prayer as keyof typeof settings.customPrayerTimes, e.target.value)} 
+                value={draft.city}
+                disabled={draft.autoLocationEnabled}
+                onChange={(event) => update('city', event.target.value)}
+                placeholder="Dhaka"
               />
             </label>
+            <label>
+              Country
+              <input
+                value={draft.country}
+                disabled={draft.autoLocationEnabled}
+                onChange={(event) => update('country', event.target.value)}
+                placeholder="Bangladesh"
+              />
+            </label>
+            <label>
+              Calculation method
+              <select value={draft.method} onChange={(event) => update('method', Number(event.target.value))}>
+                {METHODS.map((method) => <option key={method.value} value={method.value}>{method.label}</option>)}
+              </select>
+            </label>
+            <label>
+              Madhab
+              <select value={draft.madhab} onChange={(event) => update('madhab', event.target.value as Madhab)}>
+                <option value="hanafi">Hanafi</option>
+                <option value="shafi">Shafi</option>
+              </select>
+            </label>
+            <label>
+              Hijri adjustment
+              <input
+                type="number"
+                min={-3}
+                max={3}
+                value={draft.hijriAdjustment}
+                onChange={(event) => update('hijriAdjustment', Number(event.target.value))}
+              />
+            </label>
+          </div>
+        </div>
+
+        <div className="settings-section">
+          <h4>Prayer-wise Notifications</h4>
+          <div className="notification-grid">
+            {PRAYERS.map((name) => {
+              const config = draft.prayerNotifications[name];
+              return (
+                <div className="notification-row" key={name}>
+                  <strong>{name}</strong>
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={config.enabled}
+                      onChange={(event) => update('prayerNotifications', {
+                        ...draft.prayerNotifications,
+                        [name]: { ...config, enabled: event.target.checked }
+                      })}
+                    />
+                    Enabled
+                  </label>
+                  <label>
+                    Before
+                    <input
+                      type="number"
+                      min={0}
+                      max={60}
+                      value={config.beforeMinutes}
+                      onChange={(event) => update('prayerNotifications', {
+                        ...draft.prayerNotifications,
+                        [name]: { ...config, beforeMinutes: Number(event.target.value) }
+                      })}
+                    />
+                    min
+                  </label>
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={config.atTime}
+                      onChange={(event) => update('prayerNotifications', {
+                        ...draft.prayerNotifications,
+                        [name]: { ...config, atTime: event.target.checked }
+                      })}
+                    />
+                    At time
+                  </label>
+                </div>
+              );
+            })}
+          </div>
+          <div className="toggle-list">
+            <label>
+              <input
+                type="checkbox"
+                checked={draft.notificationsEnabled}
+                onChange={(event) => update('notificationsEnabled', event.target.checked)}
+              />
+              Enable notifications
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                checked={draft.hourlyRemindersEnabled}
+                onChange={(event) => update('hourlyRemindersEnabled', event.target.checked)}
+              />
+              Hourly Quran/Hadith reminder
+            </label>
+          </div>
+        </div>
+
+        <div className="settings-section">
+          <h4>Appearance</h4>
+          <div className="form-grid">
+            <label>
+              Clock
+              <select value={draft.clockMode} onChange={(event) => update('clockMode', event.target.value as Settings['clockMode'])}>
+                <option value="analog">Analog</option>
+                <option value="digital">Digital</option>
+              </select>
+            </label>
+            <label>
+              Time format
+              <select value={draft.timeFormat} onChange={(event) => update('timeFormat', event.target.value as Settings['timeFormat'])}>
+                <option value="12h">12 hour</option>
+                <option value="24h">24 hour</option>
+              </select>
+            </label>
+            <label>
+              Theme
+              <select value={draft.backgroundTheme} onChange={(event) => update('backgroundTheme', event.target.value as BackgroundTheme)}>
+                {THEMES.map((theme) => <option key={theme}>{theme}</option>)}
+              </select>
+            </label>
+            <label>
+              Accent
+              <input type="color" value={draft.accentColor} onChange={(event) => update('accentColor', event.target.value)} />
+            </label>
+            <label>
+              Glass blur
+              <input type="range" min={0} max={35} value={draft.glassBlur} onChange={(event) => update('glassBlur', Number(event.target.value))} />
+            </label>
+            <label>
+              Background image URL
+              <input value={draft.customBackground} onChange={(event) => update('customBackground', event.target.value)} placeholder="https://…" />
+            </label>
+            <label>
+              Content change
+              <select value={draft.wordChangeInterval} onChange={(event) => update('wordChangeInterval', event.target.value as WordChangeInterval)}>
+                {INTERVALS.map((interval) => <option key={interval}>{interval}</option>)}
+              </select>
+            </label>
+          </div>
+          <LanguageToggle language={draft.language} onChange={(language) => update('language', language)} />
+        </div>
+
+        <div className="settings-section">
+          <h4>Dashboard Cards</h4>
+          <div className="toggle-list">
+            {([
+              ['showQuran', 'Quran card'],
+              ['showDua', 'Dua card'],
+              ['showHadith', 'Hadith card']
+            ] as [keyof Settings, string][]).map(([key, label]) => (
+              <label key={key}>
+                <input
+                  type="checkbox"
+                  checked={Boolean(draft[key])}
+                  onChange={(event) => update(key, event.target.checked as never)}
+                />
+                {label}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div className="settings-section">
+          <h4>Custom Jamaat Times</h4>
+          <div className="form-grid">
+            {PRAYERS.map((name) => (
+              <label key={name}>
+                {name}
+                <input
+                  type="time"
+                  value={draft.customPrayerTimes[name] || ''}
+                  onChange={(event) => update('customPrayerTimes', {
+                    ...draft.customPrayerTimes,
+                    [name]: event.target.value || null
+                  })}
+                />
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div className="settings-section">
+          <h4>Daily Barakah Checklist</h4>
+          {draft.dailyActions.map((action) => (
+            <div className="daily-action-row" key={action.id}>
+              <input value={action.icon} onChange={(event) => update('dailyActions', draft.dailyActions.map((item) => item.id === action.id ? { ...item, icon: event.target.value } : item))} />
+              <input value={action.name} onChange={(event) => update('dailyActions', draft.dailyActions.map((item) => item.id === action.id ? { ...item, name: event.target.value } : item))} />
+              <input value={action.bnName} onChange={(event) => update('dailyActions', draft.dailyActions.map((item) => item.id === action.id ? { ...item, bnName: event.target.value } : item))} />
+              <button type="button" onClick={() => update('dailyActions', draft.dailyActions.filter((item) => item.id !== action.id))}>×</button>
+            </div>
           ))}
+          <button type="button" onClick={() => update('dailyActions', [...draft.dailyActions, { id: crypto.randomUUID(), name: 'New action', bnName: 'নতুন আমল', icon: '✓' }])}>+ Add action</button>
         </div>
-        
-        <LanguageToggle language={settings.language} onChange={(language) => update('language', language)} />
-        <div className="toggle-list">
-          <label><input type="checkbox" checked={settings.timeFormat === '12h'} onChange={(e) => update('timeFormat', e.target.checked ? '12h' : '24h')} /> 12-hour time</label>
-          <label><input type="checkbox" checked={settings.notificationsEnabled} onChange={(e) => update('notificationsEnabled', e.target.checked)} /> Enable notifications</label>
-          <label><input type="checkbox" checked={settings.showQuran} onChange={(e) => update('showQuran', e.target.checked)} /> Quran card</label>
-          <label><input type="checkbox" checked={settings.showDua} onChange={(e) => update('showDua', e.target.checked)} /> Dua card</label>
-          <label><input type="checkbox" checked={settings.showHadith} onChange={(e) => update('showHadith', e.target.checked)} /> Hadith card</label>
-          <label><input type="checkbox" checked={settings.showProductivity} onChange={(e) => update('showProductivity', e.target.checked)} /> Productivity tools</label>
+
+        <div className="settings-section">
+          <h4>Quick Links</h4>
+          <div className="quick-links-settings">
+            {draft.quickLinks.map((link) => (
+              <div key={link.id} className="quick-link-item">
+                <input value={link.name} onChange={(event) => updateLink(link.id, 'name', event.target.value)} placeholder="Name" />
+                <input value={link.url} onChange={(event) => updateLink(link.id, 'url', event.target.value)} placeholder="URL" />
+                <label>
+                  <input type="checkbox" checked={link.useFavicon || false} onChange={(event) => updateLink(link.id, 'useFavicon', event.target.checked)} />
+                  Auto icon
+                </label>
+                <button type="button" onClick={() => update('quickLinks', draft.quickLinks.filter((item) => item.id !== link.id))}>×</button>
+              </div>
+            ))}
+            <button type="button" onClick={() => update('quickLinks', [...draft.quickLinks, { id: crypto.randomUUID(), name: 'New Link', url: 'https://', useFavicon: true }])}>+ Add link</button>
+          </div>
         </div>
+
+        <div className="settings-section">
+          <h4>Custom Hijri Events</h4>
+          {draft.customEvents.map((event) => (
+            <div className="custom-event-row" key={event.id}>
+              <input value={event.name} onChange={(change) => update('customEvents', draft.customEvents.map((item) => item.id === event.id ? { ...item, name: change.target.value } : item))} />
+              <input value={event.bnName} onChange={(change) => update('customEvents', draft.customEvents.map((item) => item.id === event.id ? { ...item, bnName: change.target.value } : item))} />
+              <input type="number" min={1} max={12} value={event.month} onChange={(change) => update('customEvents', draft.customEvents.map((item) => item.id === event.id ? { ...item, month: Number(change.target.value) } : item))} />
+              <input type="number" min={1} max={30} value={event.day} onChange={(change) => update('customEvents', draft.customEvents.map((item) => item.id === event.id ? { ...item, day: Number(change.target.value) } : item))} />
+              <label>
+                <input type="checkbox" checked={event.reminderEnabled} onChange={(change) => update('customEvents', draft.customEvents.map((item) => item.id === event.id ? { ...item, reminderEnabled: change.target.checked } : item))} />
+                Alert
+              </label>
+              <button type="button" onClick={() => update('customEvents', draft.customEvents.filter((item) => item.id !== event.id))}>×</button>
+            </div>
+          ))}
+          <button type="button" onClick={() => update('customEvents', [...draft.customEvents, { id: crypto.randomUUID(), name: 'Custom event', bnName: 'কাস্টম ইভেন্ট', month: 1, day: 1, reminderEnabled: true }])}>+ Add event</button>
+        </div>
+
+        <div className="settings-section">
+          <h4>Backup</h4>
+          <div className="actions">
+            <button type="button" onClick={() => void exportData()}>Export JSON</button>
+            <button type="button" onClick={() => fileRef.current?.click()}>Import JSON</button>
+            <input hidden ref={fileRef} type="file" accept="application/json" onChange={(event) => void importData(event.target.files?.[0])} />
+            <button type="button" onClick={async () => { await clearAllStored(); location.reload(); }}>Reset all data</button>
+          </div>
+        </div>
+
         <p className="notice">Islamic dates may vary depending on local moon sighting.</p>
-        <div className="actions">
-          <button onClick={async () => { await clearAllStored(); location.reload(); }}>Reset all data</button>
-          <button className="primary" onClick={onClose}>Done</button>
+        <div className="actions settings-actions">
+          <button type="button" onClick={onClose}>Cancel</button>
+          <button className="primary" type="button" onClick={applySettings}>Apply settings</button>
         </div>
       </section>
     </div>

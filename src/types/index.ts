@@ -1,6 +1,5 @@
 export type Language = 'en' | 'bn';
 export type PrayerName = 'Fajr' | 'Dhuhr' | 'Asr' | 'Maghrib' | 'Isha';
-
 export type BackgroundTheme = 'default' | 'ocean' | 'forest' | 'sunset' | 'midnight';
 export type WordChangeInterval = 'daily' | '12h' | '6h' | '3h' | 'hourly';
 export type Madhab = 'hanafi' | 'shafi';
@@ -11,6 +10,29 @@ export interface QuickLink {
   url: string;
   icon?: string;
   useFavicon?: boolean;
+  category?: string;
+}
+
+export interface PrayerNotificationSetting {
+  enabled: boolean;
+  beforeMinutes: number;
+  atTime: boolean;
+}
+
+export interface CustomIslamicEvent {
+  id: string;
+  name: string;
+  bnName: string;
+  month: number;
+  day: number;
+  reminderEnabled: boolean;
+}
+
+export interface DailyActionDefinition {
+  id: string;
+  name: string;
+  bnName: string;
+  icon: string;
 }
 
 export interface Settings {
@@ -23,18 +45,34 @@ export interface Settings {
   clockMode: 'analog' | 'digital';
   notificationsEnabled: boolean;
   notificationMinutes: number;
+  prayerNotifications: Record<PrayerName, PrayerNotificationSetting>;
+  hourlyRemindersEnabled: boolean;
   showQuran: boolean;
   showHadith: boolean;
   showDua: boolean;
   showProductivity: boolean;
+  showIslamicCalendar: boolean;
+  showFastingTracker: boolean;
+  showSalahStats: boolean;
+  showQuranGoal: boolean;
+  showRamadanMode: boolean;
   autoLocationEnabled: boolean;
   latitude: number | null;
   longitude: number | null;
   customPrayerTimes: Record<PrayerName, string | null>;
   hijriAdjustment: number;
   backgroundTheme: BackgroundTheme;
+  customBackground: string;
+  accentColor: string;
+  glassBlur: number;
   wordChangeInterval: WordChangeInterval;
   quickLinks: QuickLink[];
+  quranDailyGoal: number;
+  dhikrTarget: number;
+  customDhikrName: string;
+  customEvents: CustomIslamicEvent[];
+  dailyActions: DailyActionDefinition[];
+  toolOrder: string[];
 }
 
 export interface HijriDate {

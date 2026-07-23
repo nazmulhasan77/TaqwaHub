@@ -56,8 +56,8 @@ function addMinutes(date: Date, minutes: number): Date {
   return next;
 }
 
-export function formatPrayerWindowTime(date: Date): string {
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+export function formatPrayerWindowTime(date: Date, format: '12h' | '24h' = '12h'): string {
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: format === '12h' });
 }
 
 export function getForbiddenPrayerWindows(prayerTimes: PrayerTimes, now = new Date()) {

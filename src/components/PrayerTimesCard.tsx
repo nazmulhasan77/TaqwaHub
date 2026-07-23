@@ -1,15 +1,16 @@
-import type { Language, PrayerTimes } from '../types';
+import type { Language, PrayerTimes, Settings } from '../types';
 import { prayerLabels } from '../data/translations';
 import { getCurrentOrNextPrayer, prayerOrder } from '../utils/prayerUtils';
-import { formatTime12h } from '../utils/dateUtils';
+import { formatTime } from '../utils/dateUtils';
 
 interface Props {
   prayerTimes: PrayerTimes;
   now: Date;
   language: Language;
+  timeFormat: Settings['timeFormat'];
 }
 
-export default function PrayerTimesCard({ prayerTimes, now, language }: Props) {
+export default function PrayerTimesCard({ prayerTimes, now, language, timeFormat }: Props) {
   const { next } = getCurrentOrNextPrayer(prayerTimes, now);
   return (
     <section className="glass card">
@@ -21,13 +22,13 @@ export default function PrayerTimesCard({ prayerTimes, now, language }: Props) {
         {prayerOrder.map((name) => (
           <div key={name} className={`prayer-row ${next.name === name ? 'next' : ''}`}>
             <span>{prayerLabels[name][language]}</span>
-            <strong>{formatTime12h(prayerTimes.timings[name])}</strong>
+            <strong>{formatTime(prayerTimes.timings[name], timeFormat)}</strong>
           </div>
         ))}
       </div>
       <div className="sun-grid">
-        <div><span>🌅 {prayerLabels.Sunrise[language]}</span><strong>{formatTime12h(prayerTimes.timings.Sunrise)}</strong></div>
-        <div><span>🌇 {prayerLabels.Sunset[language]}</span><strong>{formatTime12h(prayerTimes.timings.Sunset)}</strong></div>
+        <div><span>🌅 {prayerLabels.Sunrise[language]}</span><strong>{formatTime(prayerTimes.timings.Sunrise, timeFormat)}</strong></div>
+        <div><span>🌇 {prayerLabels.Sunset[language]}</span><strong>{formatTime(prayerTimes.timings.Sunset, timeFormat)}</strong></div>
       </div>
     </section>
   );

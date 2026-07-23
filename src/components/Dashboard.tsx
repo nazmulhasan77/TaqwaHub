@@ -1,8 +1,8 @@
 import { getAsmaNameForKey } from '../data/asmaulHusna';
 import { prayerLabels } from '../data/translations';
 import { getUpcomingIslamicEvent } from '../services/eventService';
-import type { Language, PrayerTimes } from '../types';
-import { dayPart, secondsToClock, formatTime12h } from '../utils/dateUtils';
+import type { Language, PrayerTimes, Settings, CustomIslamicEvent } from '../types';
+import { dayPart, secondsToClock, formatTime } from '../utils/dateUtils';
 import {
   formatPrayerWindowTime,
   getCurrentSalahPeriod,
@@ -17,11 +17,13 @@ interface Props {
   language: Language;
   prayerTimes: PrayerTimes;
   contentChangeKey: string;
+  timeFormat: Settings['timeFormat'];
+  customEvents: CustomIslamicEvent[];
 }
 
-export default function Dashboard({ now, language, prayerTimes, contentChangeKey }: Props) {
+export default function Dashboard({ now, language, prayerTimes, contentChangeKey, timeFormat, customEvents }: Props) {
   const hijri = prayerTimes.hijri;
-  const event = getUpcomingIslamicEvent(hijri, language);
+  const event = getUpcomingIslamicEvent(hijri, language, customEvents);
   const asmaName = getAsmaNameForKey(contentChangeKey);
   const { current, at, status } = getCurrentSalahPeriod(prayerTimes, now);
   const next = getNextPrayer(prayerTimes, now);
@@ -53,7 +55,7 @@ export default function Dashboard({ now, language, prayerTimes, contentChangeKey
       <div className="next-prayer-band">
         <div className="sun-pill">
           <span>🌅 SUNRISE</span>
-          <strong>{formatTime12h(prayerTimes.timings.Sunrise)}</strong>
+          <strong>{formatTime(prayerTimes.timings.Sunrise, timeFormat)}</strong>
         </div>
         <div className="next-prayer-main">
           <span>Next Prayer</span>
@@ -62,7 +64,7 @@ export default function Dashboard({ now, language, prayerTimes, contentChangeKey
         </div>
         <div className="sun-pill right">
           <span>🌇 SUNSET</span>
-          <strong>{formatTime12h(prayerTimes.timings.Sunset)}</strong>
+          <strong>{formatTime(prayerTimes.timings.Sunset, timeFormat)}</strong>
         </div>
       </div>
 
@@ -72,7 +74,7 @@ export default function Dashboard({ now, language, prayerTimes, contentChangeKey
           {forbiddenWindows.map((window) => (
             <small key={window.id} className={window.active ? 'active' : ''}>
               <strong>{window.label[language]}</strong>
-              {formatPrayerWindowTime(window.startsAt)} - {formatPrayerWindowTime(window.endsAt)}
+              {formatPrayerWindowTime(window.startsAt, timeFormat)} - {formatPrayerWindowTime(window.endsAt, timeFormat)}
             </small>
           ))}
         </div>
@@ -85,7 +87,7 @@ export default function Dashboard({ now, language, prayerTimes, contentChangeKey
             <div key={name} className={current === name ? 'prayer-chip active' : 'prayer-chip'}>
               <div className="prayer-chip-content">
                 <span>{prayerLabels[name][language]}</span>
-                <strong>{formatTime12h(prayerTimes.timings[name])}</strong>
+                <strong>{formatTime(prayerTimes.timings[name], timeFormat)}</strong>
               </div>
               <div className="progress-bar">
                 <div className="progress-fill" style={{ width: `${progress}%` }} />
